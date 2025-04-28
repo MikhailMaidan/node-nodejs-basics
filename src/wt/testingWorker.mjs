@@ -1,10 +1,8 @@
 import { Worker } from "worker_threads";
 import { fileURLToPath } from "url";
-import path from "path";
 
-const workerFile = fileURLToPath(
-  new URL("./src/wt/worker.js", import.meta.url)
-);
+const workerFile = fileURLToPath(new URL("./worker.js", import.meta.url));
+
 const worker = new Worker(workerFile, { type: "module" });
 
 worker.once("message", (result) => {
