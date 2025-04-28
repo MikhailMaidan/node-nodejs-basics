@@ -6,7 +6,7 @@ const workerFile = fileURLToPath(new URL("./worker.js", import.meta.url));
 const worker = new Worker(workerFile, { type: "module" });
 
 worker.once("message", (result) => {
-  console.log("✔ Fib(10) =", result);
+  console.log("Fibonacci(10) =", result);
   worker.terminate();
 });
 
