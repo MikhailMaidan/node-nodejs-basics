@@ -60,7 +60,7 @@ rl.on("line", (line) => {
     return rl.prompt();
   }
 
-  console.log("Invalid input");
+  console.log("Invalid input happened");
   console.log(`You are currently in ${process.cwd()}`);
   rl.prompt();
 });
