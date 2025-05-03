@@ -4,13 +4,11 @@ const path = require("path");
 const fs = require("fs");
 
 const args = process.argv.slice(2);
-const usernameArg = args.find((arg) => arg.startsWith("--username="));
-
+const usernameArg = args.find((a) => a.startsWith("--username="));
 if (!usernameArg) {
   console.error("You missed required argument: --username=your_username");
   process.exit(1);
 }
-
 const username = usernameArg.split("=")[1];
 
 process.chdir(os.homedir());
@@ -39,9 +37,7 @@ rl.on("line", (line) => {
 
   if (input === "up") {
     const parent = path.dirname(process.cwd());
-    if (parent !== process.cwd()) {
-      process.chdir(parent);
-    }
+    if (parent !== process.cwd()) process.chdir(parent);
     console.log(`You are currently in ${process.cwd()}`);
     return rl.prompt();
   }
@@ -75,11 +71,71 @@ rl.on("line", (line) => {
       });
 
       console.log("Type\tName");
-      for (const e of entries) {
-        console.log(`${e.isDir ? "dir " : "file"}\t${e.name}`);
-      }
+      entries.forEach((e) =>
+        console.log(`${e.isDir ? "dir " : "file"}\t${e.name}`)
+      );
     } catch {
       console.log("Operation failed");
+    }
+    console.log(`You are currently in ${process.cwd()}`);
+    return rl.prompt();
+  }
+
+  if (input.startsWith("cat ")) {
+    const target = input.slice(4).trim();
+    const fullPath = path.isAbsolute(target)
+      ? target
+      : path.resolve(process.cwd(), target);
+
+    try {
+      const stat = fs.statSync(fullPath);
+      if (!stat.isFile()) throw new Error();
+
+      const rs = fs.createReadStream(fullPath, "utf8");
+      rs.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      rs.on("end", () => {
+        console.log();
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      rs.pipe(process.stdout);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      rl.prompt();
+    }
+    return;
+  }
+
+  if (input.startsWith("add ")) {
+    const name = input.slice(4).trim();
+    const fullPath = path.resolve(process.cwd(), name);
+
+    try {
+      fs.writeFileSync(fullPath, "", { flag: "wx" });
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    console.log(`You are currently in ${process.cwd()}`);
+    return rl.prompt();
+  }
+
+  if (input.startsWith("mkdir ")) {
+    const name = input.slice(6).trim();
+    const fullPath = path.resolve(process.cwd(), name);
+
+    try {
+      fs.mkdirSync(fullPath);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
     }
     console.log(`You are currently in ${process.cwd()}`);
     return rl.prompt();
