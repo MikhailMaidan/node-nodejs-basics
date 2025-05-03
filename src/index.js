@@ -180,6 +180,93 @@ rl.on("line", (line) => {
     return rl.prompt();
   }
 
+  if (input.startsWith("cp ")) {
+    const parts = input.split(" ").slice(1);
+    if (parts.length !== 2) {
+      console.log("Invalid input");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    const [srcRaw, destRaw] = parts;
+    const src = path.isAbsolute(srcRaw)
+      ? srcRaw
+      : path.resolve(process.cwd(), srcRaw);
+    const destDir = path.isAbsolute(destRaw)
+      ? destRaw
+      : path.resolve(process.cwd(), destRaw);
+    const dest = path.join(destDir, path.basename(srcRaw));
+
+    try {
+      const rs = fs.createReadStream(src);
+      const ws = fs.createWriteStream(dest);
+      rs.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      ws.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      ws.on("finish", () => {
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      rs.pipe(ws);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      rl.prompt();
+    }
+    return;
+  }
+
+  if (input.startsWith("mv ")) {
+    const parts = input.split(" ").slice(1);
+    if (parts.length !== 2) {
+      console.log("Invalid input");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    const [srcRaw, destRaw] = parts;
+    const src = path.isAbsolute(srcRaw)
+      ? srcRaw
+      : path.resolve(process.cwd(), srcRaw);
+    const destDir = path.isAbsolute(destRaw)
+      ? destRaw
+      : path.resolve(process.cwd(), destRaw);
+    const dest = path.join(destDir, path.basename(srcRaw));
+
+    try {
+      const rs = fs.createReadStream(src);
+      const ws = fs.createWriteStream(dest);
+      rs.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      ws.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      ws.on("finish", () => {
+        try {
+          fs.unlinkSync(src);
+        } catch {}
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      rs.pipe(ws);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      rl.prompt();
+    }
+    return;
+  }
+
   console.log("Invalid input");
   console.log(`You are currently in ${process.cwd()}`);
   rl.prompt();
