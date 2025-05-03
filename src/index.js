@@ -83,15 +83,15 @@ rl.on("line", (line) => {
 
   if (input.startsWith("cat ")) {
     const target = input.slice(4).trim();
-    const fullPath = path.isAbsolute(target)
+    const full = path.isAbsolute(target)
       ? target
       : path.resolve(process.cwd(), target);
 
     try {
-      const stat = fs.statSync(fullPath);
+      const stat = fs.statSync(full);
       if (!stat.isFile()) throw new Error();
 
-      const rs = fs.createReadStream(fullPath, "utf8");
+      const rs = fs.createReadStream(full, "utf8");
       rs.on("error", () => {
         console.log("Operation failed");
         console.log(`You are currently in ${process.cwd()}`);
@@ -113,10 +113,10 @@ rl.on("line", (line) => {
 
   if (input.startsWith("add ")) {
     const name = input.slice(4).trim();
-    const fullPath = path.resolve(process.cwd(), name);
+    const full = path.resolve(process.cwd(), name);
 
     try {
-      fs.writeFileSync(fullPath, "", { flag: "wx" });
+      fs.writeFileSync(full, "", { flag: "wx" });
     } catch {
       console.log("Operation failed");
       console.log(`You are currently in ${process.cwd()}`);
@@ -128,10 +128,49 @@ rl.on("line", (line) => {
 
   if (input.startsWith("mkdir ")) {
     const name = input.slice(6).trim();
-    const fullPath = path.resolve(process.cwd(), name);
+    const full = path.resolve(process.cwd(), name);
 
     try {
-      fs.mkdirSync(fullPath);
+      fs.mkdirSync(full);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    console.log(`You are currently in ${process.cwd()}`);
+    return rl.prompt();
+  }
+
+  if (input.startsWith("rn ")) {
+    const parts = input.split(" ").slice(1);
+    if (parts.length !== 2) {
+      console.log("Invalid input");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    const [oldRaw, newName] = parts;
+    const oldFull = path.isAbsolute(oldRaw)
+      ? oldRaw
+      : path.resolve(process.cwd(), oldRaw);
+    const newFull = path.join(path.dirname(oldFull), newName);
+    try {
+      fs.renameSync(oldFull, newFull);
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      return rl.prompt();
+    }
+    console.log(`You are currently in ${process.cwd()}`);
+    return rl.prompt();
+  }
+
+  if (input.startsWith("rm ")) {
+    const target = input.slice(3).trim();
+    const full = path.isAbsolute(target)
+      ? target
+      : path.resolve(process.cwd(), target);
+    try {
+      fs.unlinkSync(full);
     } catch {
       console.log("Operation failed");
       console.log(`You are currently in ${process.cwd()}`);
