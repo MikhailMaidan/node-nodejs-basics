@@ -1,6 +1,7 @@
 const readline = require("readline");
 const os = require("os");
 const path = require("path");
+const fs = require("fs");
 
 const args = process.argv.slice(2);
 const usernameArg = args.find((arg) => arg.startsWith("--username="));
@@ -53,10 +54,34 @@ rl.on("line", (line) => {
     try {
       process.chdir(newPath);
       console.log(`You are currently in ${process.cwd()}`);
-    } catch (err) {
+    } catch {
       console.log("Operation failed");
       console.log(`You are currently in ${process.cwd()}`);
     }
+    return rl.prompt();
+  }
+
+  if (input === "ls") {
+    try {
+      const names = fs.readdirSync(process.cwd());
+      const entries = names.map((name) => {
+        const full = path.join(process.cwd(), name);
+        const stat = fs.statSync(full);
+        return { name, isDir: stat.isDirectory() };
+      });
+      entries.sort((a, b) => {
+        if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      console.log("Type\tName");
+      for (const e of entries) {
+        console.log(`${e.isDir ? "dir " : "file"}\t${e.name}`);
+      }
+    } catch {
+      console.log("Operation failed");
+    }
+    console.log(`You are currently in ${process.cwd()}`);
     return rl.prompt();
   }
 
