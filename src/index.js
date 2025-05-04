@@ -194,11 +194,11 @@ rl.on("line", (line) => {
     const destDir = path.isAbsolute(destRaw)
       ? destRaw
       : path.resolve(process.cwd(), destRaw);
-    const dest = path.join(destDir, path.basename(srcRaw));
+    const destPath = path.join(destDir, path.basename(srcRaw));
 
     try {
       const rs = fs.createReadStream(src);
-      const ws = fs.createWriteStream(dest);
+      const ws = fs.createWriteStream(destPath);
       rs.on("error", () => {
         console.log("Operation failed");
         console.log(`You are currently in ${process.cwd()}`);
@@ -236,11 +236,11 @@ rl.on("line", (line) => {
     const destDir = path.isAbsolute(destRaw)
       ? destRaw
       : path.resolve(process.cwd(), destRaw);
-    const dest = path.join(destDir, path.basename(srcRaw));
+    const destPath = path.join(destDir, path.basename(srcRaw));
 
     try {
       const rs = fs.createReadStream(src);
-      const ws = fs.createWriteStream(dest);
+      const ws = fs.createWriteStream(destPath);
       rs.on("error", () => {
         console.log("Operation failed");
         console.log(`You are currently in ${process.cwd()}`);
@@ -265,6 +265,37 @@ rl.on("line", (line) => {
       rl.prompt();
     }
     return;
+  }
+
+  if (input.startsWith("os ")) {
+    const flag = input.split(" ")[1];
+    switch (flag) {
+      case "--EOL":
+        console.log(JSON.stringify(os.EOL));
+        break;
+      case "--cpus":
+        const cpus = os.cpus();
+        console.log(`Total CPUs: ${cpus.length}`);
+        cpus.forEach((cpu, i) =>
+          console.log(
+            `CPU ${i}: ${cpu.model}, ${Math.round(cpu.speed / 1000)} GHz`
+          )
+        );
+        break;
+      case "--homedir":
+        console.log(os.homedir());
+        break;
+      case "--username":
+        console.log(os.userInfo().username);
+        break;
+      case "--architecture":
+        console.log(os.arch());
+        break;
+      default:
+        console.log("Invalid input");
+    }
+    console.log(`You are currently in ${process.cwd()}`);
+    return rl.prompt();
   }
 
   console.log("Invalid input");
