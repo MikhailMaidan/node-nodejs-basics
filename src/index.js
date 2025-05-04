@@ -2,9 +2,10 @@ const readline = require("readline");
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 const args = process.argv.slice(2);
-const usernameArg = args.find((a) => a.startsWith("--username="));
+const usernameArg = args.find((arg) => arg.startsWith("--username="));
 if (!usernameArg) {
   console.error("You missed required argument: --username=your_username");
   process.exit(1);
@@ -65,11 +66,9 @@ rl.on("line", (line) => {
         const stat = fs.statSync(full);
         return { name, isDir: stat.isDirectory() };
       });
-      entries.sort((a, b) => {
-        if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      });
-
+      entries.sort((a, b) =>
+        a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1
+      );
       console.log("Type\tName");
       entries.forEach((e) =>
         console.log(`${e.isDir ? "dir " : "file"}\t${e.name}`)
@@ -86,11 +85,9 @@ rl.on("line", (line) => {
     const full = path.isAbsolute(target)
       ? target
       : path.resolve(process.cwd(), target);
-
     try {
       const stat = fs.statSync(full);
       if (!stat.isFile()) throw new Error();
-
       const rs = fs.createReadStream(full, "utf8");
       rs.on("error", () => {
         console.log("Operation failed");
@@ -114,7 +111,6 @@ rl.on("line", (line) => {
   if (input.startsWith("add ")) {
     const name = input.slice(4).trim();
     const full = path.resolve(process.cwd(), name);
-
     try {
       fs.writeFileSync(full, "", { flag: "wx" });
     } catch {
@@ -129,7 +125,6 @@ rl.on("line", (line) => {
   if (input.startsWith("mkdir ")) {
     const name = input.slice(6).trim();
     const full = path.resolve(process.cwd(), name);
-
     try {
       fs.mkdirSync(full);
     } catch {
@@ -181,13 +176,7 @@ rl.on("line", (line) => {
   }
 
   if (input.startsWith("cp ")) {
-    const parts = input.split(" ").slice(1);
-    if (parts.length !== 2) {
-      console.log("Invalid input");
-      console.log(`You are currently in ${process.cwd()}`);
-      return rl.prompt();
-    }
-    const [srcRaw, destRaw] = parts;
+    const [, , srcRaw, destRaw] = input.split(" ");
     const src = path.isAbsolute(srcRaw)
       ? srcRaw
       : path.resolve(process.cwd(), srcRaw);
@@ -195,7 +184,6 @@ rl.on("line", (line) => {
       ? destRaw
       : path.resolve(process.cwd(), destRaw);
     const destPath = path.join(destDir, path.basename(srcRaw));
-
     try {
       const rs = fs.createReadStream(src);
       const ws = fs.createWriteStream(destPath);
@@ -223,13 +211,7 @@ rl.on("line", (line) => {
   }
 
   if (input.startsWith("mv ")) {
-    const parts = input.split(" ").slice(1);
-    if (parts.length !== 2) {
-      console.log("Invalid input");
-      console.log(`You are currently in ${process.cwd()}`);
-      return rl.prompt();
-    }
-    const [srcRaw, destRaw] = parts;
+    const [, , srcRaw, destRaw] = input.split(" ");
     const src = path.isAbsolute(srcRaw)
       ? srcRaw
       : path.resolve(process.cwd(), srcRaw);
@@ -237,7 +219,6 @@ rl.on("line", (line) => {
       ? destRaw
       : path.resolve(process.cwd(), destRaw);
     const destPath = path.join(destDir, path.basename(srcRaw));
-
     try {
       const rs = fs.createReadStream(src);
       const ws = fs.createWriteStream(destPath);
@@ -296,6 +277,33 @@ rl.on("line", (line) => {
     }
     console.log(`You are currently in ${process.cwd()}`);
     return rl.prompt();
+  }
+
+  if (input.startsWith("hash ")) {
+    const target = input.slice(5).trim();
+    const full = path.isAbsolute(target)
+      ? target
+      : path.resolve(process.cwd(), target);
+    try {
+      const rs = fs.createReadStream(full);
+      const hash = crypto.createHash("sha256");
+      rs.on("data", (chunk) => hash.update(chunk));
+      rs.on("end", () => {
+        console.log(hash.digest("hex"));
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+      rs.on("error", () => {
+        console.log("Operation failed");
+        console.log(`You are currently in ${process.cwd()}`);
+        rl.prompt();
+      });
+    } catch {
+      console.log("Operation failed");
+      console.log(`You are currently in ${process.cwd()}`);
+      rl.prompt();
+    }
+    return;
   }
 
   console.log("Invalid input");
